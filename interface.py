@@ -14,6 +14,7 @@ import os
 from packet import *
 
 from common import packetQ
+from flow import *
 import thread
 
 from common import flowTable
@@ -62,13 +63,25 @@ class Interface:
         # print self.pcapFilePathList
         #print str(len(packetQ))
 
+    def find_or_create_flow(self,packet):
+        # 需要增加条件，必须SYN包才建流
+        if packet.tuple4 not in flowTable:
+            f = Flow(packet)
+            flowTable[packet.tuple4] = f
+            pass
+        else:
+            # 需要增加条件，决定是否是同一五元组的两条流
+            flowTable[packet.tuple4].add_packet_to_flow(packet)
+            pass
+
     def process_data(self,arg):
         while True:
             if packetQ.empty():
                 continue
             else:
                 p = packetQ.get()
-                print p
+                self.find_or_create_flow(p)
+                # print p
 
     def statrt(self):
         try:
